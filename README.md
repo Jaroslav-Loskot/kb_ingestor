@@ -1,171 +1,182 @@
-````markdown
 # KB Ingestor
 
-**KB Ingestor** is a lightweight API service designed to support ingestion, chunking, embedding, and vector search of knowledge base content. It integrates with PostgreSQL + pgvector and uses Amazon Bedrock for embeddings (e.g., Titan model).
+**KB Ingestor** is a FastAPI-based service for embedding and storing knowledge base content in a PostgreSQL database with `pgvector`. It supports document chunking, semantic vector search, metadata filtering, and content deletion.
 
 ---
 
 ## 🚀 Features
 
-- 🔹 Chunk raw text into overlapping sections
-- 🔹 Generate embeddings using Amazon Bedrock
-- 🔹 Store chunks in a vector-enabled PostgreSQL table
-- 🔹 Search via vector similarity with optional metadata filters
-- 🔹 Delete chunks by metadata (with dry-run support)
+- Embed text with Amazon Titan (via Bedrock)
+- Store documents in PostgreSQL using `pgvector`
+- Automatic chunking of large documents
+- Metadata support (e.g., `document_id`, `namespace`, etc.)
+- Similarity search using embeddings
+- Metadata-based deletion
+- Dry-run mode for safe deletions
+- Health check endpoint (`/health`)
 
 ---
 
-## 📦 Requirements
+## 🧾 Requirements
 
 - Python 3.10+
-- PostgreSQL with `pgvector` extension
-- Amazon Bedrock access (Titan embedding model)
-- `psycopg2`, `boto3`, `fastapi`, `uvicorn`, `python-dotenv`
+- Docker + Docker Compose
+- AWS account with access to Amazon Bedrock
 
 ---
 
-## 🔧 Installation
+## 📦 Environment Setup
+
+Copy `.env.example` to `.env` and fill in your credentials:
 
 ```bash
-git clone https://github.com/yourname/kb_ingestor.git
-cd kb_ingestor
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
-````
+cp .env.example .env
+```
 
-Add a `.env` file:
+Edit `.env`:
 
-```dotenv
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=your_region
+```env
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+AWS_REGION=us-east-1
 EMBEDDING_MODEL_ID=amazon.titan-embed-text-v2:0
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=your_db
-DB_USER=your_user
-DB_PASS=your_pass
+PG_HOST=postgres
+PG_PORT=5432
+PG_DB=kb_db
+PG_USER=kb_user
+PG_PASSWORD=kb_pass
 ```
 
 ---
 
-## 🏁 Running the App
+## 🐳 Docker Compose
+
+Run the stack:
 
 ```bash
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8888
+docker-compose up --build
 ```
+
+PostgreSQL with `pgvector` and the FastAPI service will be ready at:
+
+- API: http://localhost:8888
+- Health Check: http://localhost:8888/health
 
 ---
 
-## 📚 API Endpoints
+## 🔍 API Endpoints
 
-### `/embed` – Generate Embedding
+### `POST /embed`
+Get an embedding for a given text.
 
 ```json
-POST /embed
 {
-  "text": "your content"
+  "text": "Your sentence here"
 }
 ```
 
 ---
 
-### `/upsert` – Insert Chunked Text & Embeddings
+### `POST /upsert`
+Chunk (if needed), embed, and store document(s).
 
 ```json
-POST /upsert
 {
-  "doc_id": "mydoc1",
-  "text": "Some long text to be chunked...",
+  "doc_id": "your-id",
+  "text": "Long or short document content...",
   "chunk": true,
+  "chunk_size": 300,
+  "overlap": 50,
   "metadata": {
-    "document_id": "mydoc1",
-    "namespace": "example"
+    "document_id": "doc-123",
+    "namespace": "api-docs"
   },
   "table_name": "api_chunks"
 }
 ```
 
+If content with the same `document_id` exists, it will be deleted before insert.
+
 ---
 
-### `/search` – Find Similar Documents
+### `POST /search`
+Find similar documents.
 
 ```json
-POST /search
 {
-  "embedding": [...],
+  "embedding": [0.123, 0.456, ...],
   "metadata": {
-    "document_id": "mydoc1"
+    "document_id": "doc-123"
   },
   "top_k": 5,
   "table_name": "api_chunks"
 }
 ```
 
-Returns matching documents sorted by distance.
-
 ---
 
-### `/delete` – Delete Chunks by Metadata
+### `POST /delete`
+Delete documents by metadata filter.
 
 ```json
-POST /delete
 {
   "metadata": {
-    "document_id": "mydoc1"
+    "document_id": "doc-123"
   },
   "table_name": "api_chunks",
-  "dry_run": true
+  "dry_run": false
 }
 ```
 
-Use `dry_run = true` to preview deletions without executing.
+If `dry_run: true`, it shows how many documents *would* be deleted.
 
 ---
 
-## 🧪 Testing
+### `GET /health`
+Simple service status check.
+
+---
+
+## 🧪 Tests
 
 ```bash
-pytest tests/
+pytest -s tests/test_search.py
 ```
 
-Test cases simulate full flow: embedding → upsert → search.
+Make sure the server is running before executing tests.
 
 ---
 
 ## 📁 Folder Structure
 
-```
-kb_ingestor/
-│
+```text
+kb-ingestor/
 ├── app/
-│   ├── main.py               # FastAPI app
-│   ├── vector_store.py       # DB interaction
-│   ├── embedder.py           # Bedrock embed logic
-│   ├── chunker.py            # Text splitting
-│
+│   ├── main.py           # FastAPI entrypoint
+│   ├── embedder.py       # Embedding via Bedrock
+│   ├── chunker.py        # Chunking logic
+│   └── vector_store.py   # PostgreSQL upsert/search/delete
 ├── tests/
-│   └── test_search.py        # Basic test example
-│
-└── .env                      # Environment variables
+│   └── test_search.py
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## 🧠 Future Ideas
-
-* Add support for multiple embedding providers
-* UI for interactive ingestion and query
-* CLI mode
-* Async PG driver for performance
+## 🧠 Notes
+- Only Titan embeddings (1024-d) are supported for now.
+- Adjust chunk size and overlap for best semantic segmentation.
 
 ---
 
-## 📃 License
-
-MIT License – feel free to use, contribute, or fork this for your own needs.
+## ❤️ Contributions
+PRs welcome!
 
 ---
 
-```
+## 📜 License
+MIT
