@@ -2,13 +2,12 @@ POST http://localhost:8888/upsert
 Content-Type: application/json
 
 {
-  "text": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-  "chunk": true,
-  "chunk_size": 300,
-  "overlap": 50,
+  "text": "This is a UML diagram showing login flow:\n\n@startuml autonumber \"[000]\" title Web Application Login participant \"End User\" as USR participant \"Customer Application Web\" as APP participant \"Customer Backend\" as BCK participant \"ThreatMark Platform\" as AFS USR -> APP ++ : Opens the UI APP -> AFS ++ : Requests the JavaScript Probe AFS --> APP -- : Provides the JavaScript APP -> APP : Probe issues cookie values APP -> AFS : Probe initializes async data gathering USR -> APP : Requests Login loop for each authorization step APP -> USR : Requests Auth. Item (Password, OTP, Token) USR --> APP : Provides Authorization Item APP -> BCK ++ : Evaluate Login Step [passes cookie values] BCK -> AFS ++ : /session/action-login-step/create [passes cookie values] AFS --> BCK -- : scoring_result BCK -> BCK : Evaluates Risk BCK -> APP : Update UI status end alt successful login BCK -> AFS ++ : /session/login AFS --> BCK : HTTP 200 AFS -- BCK -> APP : Login Approved APP -> USR : Login else login blocked BCK -> AFS ++ : /session/login-reject AFS --> BCK : HTTP 200 AFS -- BCK -> APP : Login Rejected APP -> USR : Login Reject end APP -- @enduml",
+  "chunk": false,
   "metadata": {
     "namespace": "uml-diagrams",
-    "document_id": "seq-001"
+    "document_id": "-session-login_sequence-diagram",
+    "method_id" : "-session-login"
   },
   "table_name": "api_chunks"
 }

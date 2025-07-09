@@ -23,8 +23,10 @@ bedrock_client = boto3.client(
 )
 
 def embed_text(text: str) -> list[float]:
-    if not text.strip():
-        raise HTTPException(status_code=400, detail="Input text is empty.")
+    cleaned = text.strip()
+    if not cleaned or all(line.strip().startswith("@") or "->" in line for line in cleaned.splitlines()):
+        raise HTTPException(status_code=400, detail="Input text seems to contain only non-natural language content.")
+
 
     try:
         payload = {"inputText": text}
