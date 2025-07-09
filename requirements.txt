@@ -1,5 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 boto3
-qdrant-client
+psycopg2-binary
+pydantic
+requests
