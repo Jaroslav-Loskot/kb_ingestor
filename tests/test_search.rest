@@ -1,0 +1,8 @@
+POST http://localhost:8888/search
+Content-Type: application/json
+
+{
+  "query": "What is Lorem Ipsum?",
+  "top_k": 3,
+  "table_name": "api_chunks"
+}

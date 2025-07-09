@@ -28,10 +28,12 @@ class UpsertRequest(BaseModel):
     table_name: Optional[str] = "documents"
 
 class SearchRequest(BaseModel):
-    embedding: List[float]
+    query: Optional[str] = None
+    embedding: Optional[List[float]] = None
     metadata: Optional[Dict[str, Any]] = None
     top_k: Optional[int] = 5
-    table_name: Optional[str] = "documents"
+    table_name: Optional[str] = "api_chunks"
+
 
 
 @app.get("/health")
@@ -85,22 +87,36 @@ async def upsert(request: UpsertRequest):
 @app.post("/search")
 async def search(request: SearchRequest):
     try:
-        results = search_similar(
-            query_embedding=request.embedding,
-            top_k=request.top_k,
+        # Embed the search string if provided
+        if request.query:
+            query_embedding = embed_text(request.query)
+        elif request.embedding:
+            query_embedding = request.embedding
+        else:
+            raise HTTPException(status_code=400, detail="Either 'query' or 'embedding' must be provided.")
+
+        from app.vector_store import search_similar
+
+        matches = search_similar(
+            query_embedding=query_embedding,
             metadata_filter=request.metadata,
+            top_k=request.top_k or 5,
             table_name=request.table_name
         )
+
         return {
-            "matches": results,
+            "status": "ok",
+            "matches": matches,
             "conditions": {
                 "table_name": request.table_name,
                 "metadata": request.metadata,
-                "top_k": request.top_k
+                "query": request.query if request.query else None
             }
         }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.post("/delete")

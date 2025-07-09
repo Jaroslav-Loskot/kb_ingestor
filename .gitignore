@@ -49,5 +49,8 @@ __pydantic_cache__/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
+# Test files
+/data
+
 # But allow .env.example
 !.env.example
