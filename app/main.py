@@ -20,7 +20,6 @@ class DeleteRequest(BaseModel):
 
 
 class UpsertRequest(BaseModel):
-    doc_id: str
     text: str
     chunk: Optional[bool] = True  # Default to chunking
     chunk_size: Optional[int] = 500
@@ -47,31 +46,41 @@ async def embed_api(request: EmbedRequest):
 
 @app.post("/upsert")
 async def upsert(request: UpsertRequest):
+    from app.vector_store import delete_by_metadata_filter
+
     try:
-        from app.vector_store import delete_by_document_id
-
+        # Only delete if document_id is in metadata
         document_id = request.metadata.get("document_id")
-        if not document_id:
-            raise HTTPException(status_code=400, detail="metadata.document_id is required")
-
-        delete_by_document_id(document_id=document_id, table_name=request.table_name)
-
-        if request.chunk:
-            chunks = chunk_text(
-                request.text,
-                chunk_size=request.chunk_size or 500,
-                overlap=request.overlap or 100
+        if document_id:
+            delete_by_metadata_filter(
+                metadata_filter={"document_id": document_id},
+                table_name=request.table_name
             )
-            for chunk in chunks:
-                embedding = embed_text(chunk)
-                upsert_document(text=chunk, embedding=embedding, metadata=request.metadata, table_name=request.table_name)
-            return {"status": "ok", "chunks": len(chunks)}
-        else:
-            embedding = embed_text(request.text)
-            upsert_document(text=request.text, embedding=embedding, metadata=request.metadata, table_name=request.table_name)
-            return {"status": "ok", "chunks": 1}
+
+        chunks = chunk_text(
+            request.text,
+            chunk_size=request.chunk_size or 500,
+            overlap=request.overlap or 100
+        ) if request.chunk else [request.text]
+
+        for chunk in chunks:
+            embedding = embed_text(chunk)
+            upsert_document(
+                text=chunk,
+                embedding=embedding,
+                metadata=request.metadata,
+                table_name=request.table_name
+            )
+
+        return {
+            "status": "ok",
+            "chunks": len(chunks),
+            "deleted_existing_doc": bool(document_id)
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/search")
 async def search(request: SearchRequest):

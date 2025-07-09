@@ -17,3 +17,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+
+#     networks:
+#       - supabase_default  # Add this line
+
+# networks:
+#   supabase_default:
+#     external: true        # Important: this connects to an existing external network
