@@ -82,7 +82,6 @@ Chunk (if needed), embed, and store document(s).
 
 ```json
 {
-  "doc_id": "your-id",
   "text": "Long or short document content...",
   "chunk": true,
   "chunk_size": 300,
