@@ -6,8 +6,8 @@ Content-Type: application/json
   "chunk": false,
   "metadata": {
     "namespace": "uml-diagrams",
-    "document_id": "-session-login_sequence-diagram",
-    "method_id" : "-session-login"
+    "document_id": "/session/login_sequence-diagram",
+    "method_id" : "/session/login"
   },
   "table_name": "api_chunks"
 }
