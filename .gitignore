@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+.venv.bak/
+*.egg-info/
+.eggs/
+
+# Environment variables
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Test outputs
+htmlcov/
+.coverage
+.cache/
+.tox/
+.pytest_cache/
+
+# DB or local data files (optional, uncomment if needed)
+# *.sqlite3
+# *.db
+
+# Pydantic cache
+__pydantic_cache__/
+
+# AWS credentials cache (optional, be careful with this one)
+# .aws/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# But allow .env.example
+!.env.example

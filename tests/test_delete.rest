@@ -1,0 +1,10 @@
+POST http://localhost:8888/delete
+Content-Type: application/json
+
+{
+  "table_name": "api_chunks",
+  "metadata": {
+    "document_id": "seq-001"
+  },
+  "dry_run": true
+}
